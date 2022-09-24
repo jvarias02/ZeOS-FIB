@@ -45,3 +45,36 @@ int sys_fork()
 void sys_exit()
 {  
 }
+
+char dest_buffer[512];
+
+
+int sys_write(int fd, char * buffer, int size)
+{
+	int error_fd = check_fd(fd,ESCRIPTURA);
+	if (error_fd < 0) return error_fd;
+
+	if (buffer == NULL) return -1;
+	if (size < 0) return -1;
+
+	int bytes = size;
+	int mida = 0;
+
+	//Llegim de 512 en 512 bytes.
+	while (bytes > 0) {
+		//Si son menys de 512 bytes, ajustem la mida.
+		if (bytes >= 512) mida = 512;
+		else mida = bytes;
+
+		copy_from_user(buffer, dest_buffer, mida);
+		//Retorna num de bytes escrits
+		int nbytes = sys_write_console(dest_buffer, mida);
+
+		//bytes < 0 quan hagi acabat
+		bytes -= 512;
+		//Anem accedint a la direccio de memoria + els bytes llegits.
+		buffer = buffer + nbytes;
+	}
+
+	return size;
+}

@@ -4,7 +4,7 @@
 
 #include <asm.h>
 #include <segment.h>
-
+#include <errno.h>
 
 /**************************************************/
 /**** Save & Restore ******************************/
@@ -52,17 +52,17 @@
       movl %edx, %es
 
 #define RESTORE_ALL \
-      pop %ebx; \
-      pop %ecx; \
-      pop %edx; \
-      pop %esi; \
-      pop %edi; \
-      pop %ebp; \
-      pop %eax; \
-      pop %ds; \
-      pop %es; \
-      pop %fs; \
-      pop %gs;
+      popl %ebx; \
+      popl %ecx; \
+      popl %edx; \
+      popl %esi; \
+      popl %edi; \
+      popl %ebp; \
+      popl %eax; \
+      popl %ds; \
+      popl %es; \
+      popl %fs; \
+      popl %gs;
 
 //Notifies the system that you are ready to receive new interrupts.
 #define EOI \
@@ -77,4 +77,20 @@ ENTRY(keyboard_handler)
 	EOI
 	call keyboard_routine
 	RESTORE_ALL
+	iret
+
+ENTRY(system_call_handler)
+	SAVE_ALL				//Save context
+	cmpl $0, %EAX				//Check syscall number not negative
+	jl err 					//If it is, return error
+	cmpl $MAX_SYSCALL, %EAX		 	//Syscall number < MAX_SYSCALL
+	jg err 					//If greater, return error
+	call *sys_call_table(, %EAX, 0x04)	//Call service routine
+	jmp fin					//Finish
+
+err:
+	movl $-ENOSYS, %EAX			//Move to EAX the ENOSYS error
+fin:
+	movl %EAX, 0x18(%ESP)			//Change the EAX value in the stack
+	RESTORE_ALL				// Restore the context
 	iret

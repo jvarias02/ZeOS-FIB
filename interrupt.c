@@ -14,6 +14,7 @@ Register    idtR;
 
 
 void keyboard_handler();
+void system_call_handler();
 
 char char_map[] =
 {
@@ -81,14 +82,15 @@ void setIdt()
 {
   /* Program interrups/exception service routines */
   idtR.base  = (DWord)idt;
-  idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
-  
+  idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;  
   set_handlers();
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
   setInterruptHandler(33, keyboard_handler, 0);
+  setTrapHandler(0x80, system_call_handler, 3);
   set_idt_reg(&idtR);
 }
+
 
 void keyboard_routine()
 {
