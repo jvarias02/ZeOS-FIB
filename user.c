@@ -18,6 +18,12 @@ int __attribute__ ((__section__(".text.main")))
 
   // int resultat = addASM(0x42,0x666);
 
-	write(1, "hola", 4);
+
+  int x = 900000000;
+  while(--x);
+  if (write(1, "hola", -1) < 0) perror();
+  char buffer[20];
+  itoa(gettime(), buffer);
+  write(1,buffer,strlen(buffer));
   while(1) { }
 }

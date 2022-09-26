@@ -79,6 +79,50 @@ ENTRY(keyboard_handler)
 	RESTORE_ALL
 	iret
 
+
+ENTRY(clock_handler)
+	SAVE_ALL
+	EOI
+	call clock_routine
+	RESTORE_ALL
+	iret
+
+
+ENTRY(syscall_handler_sysenter)
+	push $__USER_DS
+	push %EBP
+	pushfl
+	push $__USER_CS
+	push 4(%EBP)
+	SAVE_ALL
+	cmpl $0, %EAX
+	jl sysenter_err
+	cmpl $MAX_SYSCALL, %EAX
+	jg sysenter_err
+	call *sys_call_table(, %EAX, 0x04)
+	jmp sysenter_fin
+sysenter_err:
+	movl $-ENOSYS, %EAX
+sysenter_fin:
+	movl %EAX, 0x18(%ESP)
+	RESTORE_ALL
+	movl (%ESP), %EDX
+	movl 12(%ESP), %ECX
+	sti
+	sysexit
+
+ENTRY(writeMSR)
+	pushl %ebp
+	movl %esp, %ebp
+
+	movl 8(%ebp), %eax
+	movl 12(%ebp), %ecx
+	movl $0, %edx
+	wrmsr
+
+	pop %ebp
+	ret
+
 ENTRY(system_call_handler)
 	SAVE_ALL				//Save context
 	cmpl $0, %EAX				//Check syscall number not negative
@@ -94,3 +138,4 @@ fin:
 	movl %EAX, 0x18(%ESP)			//Change the EAX value in the stack
 	RESTORE_ALL				// Restore the context
 	iret
+

@@ -43,3 +43,22 @@ int strlen(char *a)
   return i;
 }
 
+void perror()
+{
+
+	switch(errno)
+	{
+		case 14:
+			write(1, "Bad address\n",12);
+			break;
+		case 22:
+			write(1, "Invalid argument\n",17);
+			break;
+		case 9:
+			write(1, "Bad file descriptor\n",20);
+			break;
+		case 13:
+			write(1, "Permission denied\n",18);
+			break;
+	}
+}

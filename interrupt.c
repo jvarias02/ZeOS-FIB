@@ -15,6 +15,10 @@ Register    idtR;
 
 void keyboard_handler();
 void system_call_handler();
+void clock_handler();
+void writeMSR();
+void syscall_handler_sysenter();
+extern int zeos_ticks;
 
 char char_map[] =
 {
@@ -82,12 +86,18 @@ void setIdt()
 {
   /* Program interrups/exception service routines */
   idtR.base  = (DWord)idt;
-  idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;  
+  idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
   set_handlers();
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
   setInterruptHandler(33, keyboard_handler, 0);
+  setInterruptHandler(32, clock_handler, 0);
   setTrapHandler(0x80, system_call_handler, 3);
+
+  writeMSR(__KERNEL_CS, 0x174);
+  writeMSR(INITIAL_ESP, 0x175);
+  writeMSR(syscall_handler_sysenter, 0x176);
+
   set_idt_reg(&idtR);
 }
 
@@ -101,5 +111,12 @@ void keyboard_routine()
 		if (ch == '\0') ch = 'C';
 		printc_xy(0,0,ch);
 	}
+
+}
+
+void clock_routine()
+{
+	++zeos_ticks;
+	zeos_show_clock();
 
 }
