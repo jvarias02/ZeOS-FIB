@@ -19,7 +19,7 @@ int __attribute__ ((__section__(".text.main")))
   // int resultat = addASM(0x42,0x666);
 
 
-  int x = 900000000;
+  int x = 90000000;
   while(--x);
   if (write(1, "hola", -1) < 0) perror();
   char buffer[20];
